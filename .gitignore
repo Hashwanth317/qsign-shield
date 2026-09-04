@@ -1,18 +1,9 @@
-# Python
 .venv/
+venv/
 __pycache__/
-*.py[cod]
-.pytest_cache/
+*.pyc
+.DS_Store
+.env
 
-# Frontend dependencies and build output
 frontend/node_modules/
 frontend/dist/
-
-# Local environment and editor files
-.env
-.env.*
-!.env.example
-.DS_Store
-.idea/
-.vscode/
-*.log
