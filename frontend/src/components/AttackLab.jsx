@@ -25,7 +25,7 @@ const attackCards = [
   {
     key: 'impersonation',
     title: 'Impersonation',
-    description: 'Reuse Alice’s valid signature while claiming to be Attacker.',
+    description: 'Reuse the current sender’s valid signature while claiming to be Attacker.',
     icon: UserRoundX,
     button: 'Simulate Impersonation',
   },
@@ -42,6 +42,14 @@ function AttackLab({ activeSignature, activeAction, onRunAttack, backendOnline }
         </div>
         {!activeSignature && <span className="setup-note">Generate a signature to unlock simulations</span>}
       </div>
+
+      {activeSignature && (
+        <div className="attack-transaction-summary">
+          <span>Active signed transaction</span>
+          <strong>{activeSignature.sender} → {activeSignature.receiver}</strong>
+          <code>{activeSignature.message}</code>
+        </div>
+      )}
 
       <div className="attack-grid">
         {attackCards.map(({ key, title, description, icon: Icon, button }) => {

@@ -175,6 +175,28 @@ def test_unknown_signer_cannot_generate_signature() -> None:
     assert "Unknown signer" in response.json()["detail"]
 
 
+def test_dynamic_legitimate_signer_can_sign_and_verify() -> None:
+    message = "TRANSFER 10000 TO HARINI"
+    signed_response = client.post(
+        "/api/sign",
+        json={"message": message, "sender": "Hashwanth"},
+    )
+    assert signed_response.status_code == 201
+    signed = signed_response.json()
+    assert signed["signature_owner"] == "Hashwanth"
+
+    verification = client.post(
+        "/api/verify",
+        json={
+            "message": message,
+            "claimed_sender": "Hashwanth",
+            "signature_id": signed["signature_id"],
+        },
+    )
+    assert verification.status_code == 200
+    assert verification.json()["verification"] == "PASS"
+
+
 def test_malformed_signature_bits_are_rejected() -> None:
     signed = sign_message()
     response = client.post(

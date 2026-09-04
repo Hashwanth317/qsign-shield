@@ -96,6 +96,15 @@ main { width: min(1380px, calc(100% - 48px)); margin: 0 auto; padding: 36px 0 54
 .heading-icon { color: #76cff0; }
 .form-stack { display: grid; gap: 16px; margin-top: 25px; }
 .form-stack label { display: grid; gap: 8px; color: #bfd0df; font-size: 12px; font-weight: 700; }
+.transaction-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.transaction-preview {
+  display: grid; gap: 7px; min-height: 66px; padding: 12px 14px; border: 1px solid rgba(97, 207, 240, 0.2);
+  border-radius: 8px; background: rgba(35, 128, 159, 0.08);
+}
+.transaction-preview span { color: #84a9bd; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.transaction-preview code { overflow-wrap: anywhere; color: #b8eff8; font-size: 12px; font-weight: 500; }
+.transaction-preview.invalid { border-color: rgba(232, 166, 79, 0.25); background: rgba(149, 96, 29, 0.08); }
+.transaction-preview.invalid code { color: #d5b784; }
 input, textarea, select {
   width: 100%; padding: 11px 12px; border: 1px solid rgba(151, 182, 209, 0.2); border-radius: 8px; outline: none;
   color: #eaf3fb; background: rgba(3, 13, 24, 0.63); resize: vertical; transition: border-color 150ms ease, box-shadow 150ms ease;
@@ -150,6 +159,17 @@ select { appearance: none; cursor: pointer; background-image: linear-gradient(45
 .attack-card h3 { margin: 14px 0 7px; font-size: 15px; }
 .attack-card p { margin: 0; color: #8ea8ba; font-size: 12px; line-height: 1.6; }
 .attack-button { width: 100%; margin-top: auto; padding: 0 8px; color: #ffbaab; border-color: rgba(255, 129, 103, 0.35); background: rgba(189, 60, 42, 0.12); font-size: 10px; }
+.attack-transaction-summary {
+  display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; gap: 10px 16px; margin-top: 18px;
+  padding: 11px 13px; border: 1px solid rgba(102, 196, 221, 0.17); border-radius: 8px; background: rgba(30, 112, 145, 0.08);
+}
+.attack-transaction-summary span { color: #7e9caf; font-size: 10px; text-transform: uppercase; }
+.attack-transaction-summary strong { color: #b7e9f5; font-size: 11px; }
+.attack-transaction-summary code { overflow: hidden; color: #9eb8c8; text-overflow: ellipsis; white-space: nowrap; }
+.forgery-evidence { display: grid; grid-template-columns: 0.7fr 0.7fr 1.3fr 1.3fr; gap: 8px; margin-top: 14px; }
+.forgery-evidence > div { min-width: 0; padding: 11px; border: 1px solid rgba(255, 144, 116, 0.16); border-radius: 7px; background: rgba(139, 49, 37, 0.09); }
+.forgery-evidence span { display: block; margin-bottom: 6px; color: #b28f89; font-size: 9px; text-transform: uppercase; }
+.forgery-evidence strong, .forgery-evidence code { display: block; overflow: hidden; color: #ffd0c5; font-family: 'DM Mono', monospace; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 
 .security-layer-heading {
   display: flex; align-items: center; gap: 18px; margin: 4px 0 18px; padding: 17px 20px;
@@ -339,6 +359,7 @@ footer { width: min(1380px, calc(100% - 48px)); margin: 0 auto; padding: 20px 0 
   .quantum-controls { grid-template-columns: 1fr 1fr; }
   .quantum-run-button, .quantum-compare-button { width: 100%; }
   .quantum-metric-grid { grid-template-columns: repeat(3, 1fr); }
+  .forgery-evidence { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 720px) {
   .topbar, main, .feedback, .offline-banner, footer { width: min(100% - 28px, 1380px); }
@@ -356,6 +377,9 @@ footer { width: min(1380px, calc(100% - 48px)); margin: 0 auto; padding: 20px 0 
   .signature-detail .copy-button { justify-self: start; }
   .info-panel ol { gap: 12px; }
   .attack-card { min-height: 175px; }
+  .transaction-field-row, .forgery-evidence { grid-template-columns: 1fr; }
+  .attack-transaction-summary { grid-template-columns: 1fr; gap: 5px; }
+  .attack-transaction-summary code { white-space: normal; }
   .security-layer-heading { align-items: flex-start; padding: 15px; }
   .quantum-section-header { align-items: flex-start; flex-wrap: wrap; }
   .engine-badge { margin-left: 63px; }

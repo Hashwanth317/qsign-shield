@@ -1,20 +1,46 @@
 import { CheckCircle2, LoaderCircle, SearchCheck } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import {
+  buildTransactionMessage,
+  DEFAULT_TRANSACTION,
+  normalizeAmount,
+  normalizePartyName,
+  transactionFieldsAreValid,
+} from '../utils/transaction'
 
 function VerificationPanel({ activeSignature, onVerify, isLoading, backendOnline }) {
-  const [message, setMessage] = useState(
-    () => activeSignature?.message ?? 'TRANSFER 10000 TO BOB',
-  )
   const [claimedSender, setClaimedSender] = useState(
-    () => activeSignature?.sender ?? 'Alice',
+    () => activeSignature?.sender ?? DEFAULT_TRANSACTION.sender,
+  )
+  const [receiver, setReceiver] = useState(
+    () => activeSignature?.receiver ?? DEFAULT_TRANSACTION.receiver,
+  )
+  const [amount, setAmount] = useState(
+    () => activeSignature?.amount ?? DEFAULT_TRANSACTION.amount,
   )
   const [signatureId, setSignatureId] = useState(
     () => activeSignature?.signature_id ?? '',
   )
+  const generatedMessage = useMemo(
+    () => buildTransactionMessage(amount, receiver),
+    [amount, receiver],
+  )
+  const valid = transactionFieldsAreValid({
+    sender: claimedSender,
+    receiver,
+    amount,
+  }) && Boolean(signatureId.trim())
 
   async function handleSubmit(event) {
     event.preventDefault()
-    await onVerify({ message, claimed_sender: claimedSender, signature_id: signatureId })
+    if (!valid) return
+    await onVerify({
+      message: generatedMessage,
+      claimed_sender: normalizePartyName(claimedSender),
+      signature_id: signatureId.trim(),
+      receiver: normalizePartyName(receiver),
+      amount: normalizeAmount(amount),
+    })
   }
 
   return (
@@ -29,18 +55,28 @@ function VerificationPanel({ activeSignature, onVerify, isLoading, backendOnline
 
       <form onSubmit={handleSubmit} className="form-stack">
         <label>
-          Message
-          <textarea value={message} onChange={(event) => setMessage(event.target.value)} rows="3" required />
-        </label>
-        <label>
           Claimed Sender
-          <input value={claimedSender} onChange={(event) => setClaimedSender(event.target.value)} placeholder="Alice" required />
+          <input value={claimedSender} onChange={(event) => setClaimedSender(event.target.value)} placeholder="Alice" maxLength="64" required />
         </label>
+        <div className="transaction-field-row">
+          <label>
+            Receiver
+            <input value={receiver} onChange={(event) => setReceiver(event.target.value)} placeholder="Bob" maxLength="64" required />
+          </label>
+          <label>
+            Amount
+            <input value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="numeric" pattern="[0-9]+" placeholder="10000" maxLength="32" required />
+          </label>
+        </div>
         <label>
           Signature ID
           <input value={signatureId} onChange={(event) => setSignatureId(event.target.value)} placeholder="QS-XXXXXXXX" required />
         </label>
-        <button className="secondary-button" type="submit" disabled={isLoading || !backendOnline}>
+        <div className={`transaction-preview ${generatedMessage ? '' : 'invalid'}`} aria-live="polite">
+          <span>Generated Verification Transaction</span>
+          <code>{generatedMessage || 'Enter a valid receiver and amount'}</code>
+        </div>
+        <button className="secondary-button" type="submit" disabled={isLoading || !backendOnline || !valid}>
           {isLoading ? <LoaderCircle size={17} className="spin" /> : <CheckCircle2 size={17} />}
           {isLoading ? 'Verifying…' : 'Verify Transaction'}
         </button>

@@ -11,6 +11,7 @@ import SigningPanel from './components/SigningPanel'
 import StatsCards from './components/StatsCards'
 import VerificationPanel from './components/VerificationPanel'
 import { checkHealth, securityCheck, signMessage, verifyTransaction } from './services/api'
+import { buildTransactionMessage, forgedTransactionAmount } from './utils/transaction'
 
 const ATTACK_BY_DECISION = {
   'FORGERY ATTACK DETECTED': 'FORGERY',
@@ -32,11 +33,6 @@ function normalizeResult(data, context) {
     signature_owner: data.signature_owner ?? context.signature_owner,
     transaction_id: data.transaction_id ?? context.signature_id,
   }
-}
-
-function forgedMessage(message) {
-  const altered = message.replace('TRANSFER 10000 TO BOB', 'TRANSFER 90000 TO BOB')
-  return altered === message ? `${message} [MODIFIED]` : altered
 }
 
 function tamperedBits(bits) {
@@ -135,11 +131,11 @@ function App() {
     }
   }
 
-  async function handleSign({ sender, message }) {
+  async function handleSign({ sender, receiver, amount, message }) {
     setSigning(true)
     try {
       const signature = await signMessage({ sender, message })
-      setSignedTransaction(signature)
+      setSignedTransaction({ ...signature, receiver, amount })
       setLatestResult(null)
       showFeedback({ type: 'success', message: `Quantum signature ${signature.signature_id} generated successfully.` })
     } catch (error) {
@@ -152,7 +148,12 @@ function App() {
   async function handleVerify(payload) {
     setVerifying(true)
     try {
-      const response = await verifyTransaction(payload)
+      const apiPayload = {
+        message: payload.message,
+        claimed_sender: payload.claimed_sender,
+        signature_id: payload.signature_id,
+      }
+      const response = await verifyTransaction(apiPayload)
       const result = normalizeResult(response, contextFor(payload))
       setLatestResult(result)
       recordResult(result)
@@ -167,9 +168,12 @@ function App() {
     }
   }
 
-  async function submitSecurityCheck(payload) {
+  async function submitSecurityCheck(payload, attackContext = null) {
     const response = await securityCheck(payload)
-    const result = normalizeResult(response, contextFor(payload))
+    const result = {
+      ...normalizeResult(response, contextFor(payload)),
+      attack_context: attackContext,
+    }
     setLatestResult(result)
     recordResult(result)
     return result
@@ -188,7 +192,21 @@ function App() {
     try {
       let result
       if (attack === 'forgery') {
-        result = await submitSecurityCheck({ ...basePayload, message: forgedMessage(basePayload.message) })
+        const forgedAmount = forgedTransactionAmount(signedTransaction.amount)
+        const forgedMessage = buildTransactionMessage(
+          forgedAmount,
+          signedTransaction.receiver,
+        )
+        result = await submitSecurityCheck(
+          { ...basePayload, message: forgedMessage },
+          {
+            type: 'FORGERY',
+            originalAmount: signedTransaction.amount,
+            forgedAmount,
+            originalMessage: basePayload.message,
+            forgedMessage,
+          },
+        )
       } else if (attack === 'tampering') {
         result = await submitSecurityCheck({ ...basePayload, signature_bits: tamperedBits(signedTransaction.signature_fingerprint) })
       } else if (attack === 'impersonation') {

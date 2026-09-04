@@ -38,6 +38,14 @@ function SecurityResult({ result }) {
       </div>
 
       {!secure && <div className="attack-callout">Attack Type: <strong>{attackLabel}</strong></div>}
+      {result.attack_context?.type === 'FORGERY' && (
+        <div className="forgery-evidence">
+          <div><span>Original Amount</span><strong>{result.attack_context.originalAmount}</strong></div>
+          <div><span>Forged Amount</span><strong>{result.attack_context.forgedAmount}</strong></div>
+          <div><span>Original Transaction</span><code>{result.attack_context.originalMessage}</code></div>
+          <div><span>Forged Transaction</span><code>{result.attack_context.forgedMessage}</code></div>
+        </div>
+      )}
       <div className="result-grid">
         <Flag label="Cryptographic Signature" value={result.cryptographic_signature} positive={result.cryptographic_signature === 'PASS'} />
         <Flag label="Identity Match" value={result.identity_match ? 'PASS' : 'FAIL'} positive={result.identity_match} />

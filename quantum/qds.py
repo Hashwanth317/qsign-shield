@@ -7,6 +7,7 @@ or production-ready QDS cryptographic construction.
 
 from __future__ import annotations
 
+from hashlib import sha256
 from typing import Any
 from uuid import uuid4
 
@@ -21,16 +22,29 @@ SIGNER_KEYS = {
     "Charlie": "11000011101001010011110001101001",
 }
 
+# This identity remains reserved for the impersonation demonstration and
+# cannot own a generated signature through the public signing API.
+RESERVED_SIGNERS = frozenset({"attacker"})
+
 
 def _validate_signer(signer: str) -> str:
-    """Return a known signer's mask or raise a helpful error."""
-    try:
-        return SIGNER_KEYS[signer]
-    except KeyError as error:
-        available = ", ".join(SIGNER_KEYS)
+    """Return a stable simulation mask for a legitimate signer identity."""
+    normalized = signer.strip()
+    if not normalized or normalized.casefold() in RESERVED_SIGNERS:
         raise ValueError(
-            f"Unknown signer {signer!r}. Available signers: {available}."
-        ) from error
+            f"Unknown signer {signer!r}. The identity cannot generate a signature."
+        )
+
+    if normalized in SIGNER_KEYS:
+        return SIGNER_KEYS[normalized]
+
+    # Dynamic identities use a repeatable, public SHA-256-derived mask so the
+    # existing verifier can reproduce it. This remains an educational identity
+    # binding and is not a secret key or production QDS construction.
+    identity_digest = sha256(
+        f"Q-SIGN-SHIELD-SIMULATED-SIGNER:{normalized.casefold()}".encode("utf-8")
+    ).digest()
+    return "".join(f"{byte:08b}" for byte in identity_digest)
 
 
 def _apply_signer_mask(message_bits: str, mask: str) -> tuple[str, str]:
