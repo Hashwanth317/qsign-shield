@@ -7,6 +7,9 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, status
 
 from api.models import (
+    QuantumAnalyzeRequest,
+    QuantumAnalyzeResponse,
+    QuantumStatusResponse,
     SecurityCheckRequest,
     SecurityCheckResponse,
     SignRequest,
@@ -14,9 +17,12 @@ from api.models import (
     VerifyRequest,
     VerifyResponse,
 )
+from attacks.quantum_channel import SUPPORTED_QUANTUM_SCENARIOS
 from api.registry import SignatureRegistry
+from quantum.channel import run_quantum_channel_experiment
 from quantum.qds import generate_quantum_signature
 from security.detector import detect_security_event
+from security.quantum_forensics import analyze_quantum_forensics
 from security.replay_guard import ReplayGuard
 
 
@@ -170,4 +176,53 @@ def check_security(request: SecurityCheckRequest) -> SecurityCheckResponse:
         sender_identity=result["sender_identity"],
         signature_owner=result["signature_owner_identity"],
         transaction_id=result["transaction_id"],
+    )
+
+
+@router.get(
+    "/quantum/status",
+    response_model=QuantumStatusResponse,
+    tags=["Quantum threat forensics"],
+    summary="Report quantum forensics capability",
+)
+def quantum_forensics_status() -> QuantumStatusResponse:
+    """Return the simulator scenarios available to V0.8 clients."""
+    return QuantumStatusResponse(
+        module="Quantum Threat Forensics",
+        status="ready",
+        supported_scenarios=list(SUPPORTED_QUANTUM_SCENARIOS),
+    )
+
+
+@router.post(
+    "/quantum/analyze",
+    response_model=QuantumAnalyzeResponse,
+    tags=["Quantum threat forensics"],
+    summary="Simulate and analyze a Bell-pair channel",
+    description=(
+        "Run a seeded Qiskit Aer educational scenario, measure independent "
+        "Bell pairs in Z and X bases, and classify only the observed statistics."
+    ),
+)
+def analyze_quantum_channel(
+    request: QuantumAnalyzeRequest,
+) -> QuantumAnalyzeResponse:
+    """Run the simulator and keep its ground truth outside the classifier."""
+    experiment = run_quantum_channel_experiment(
+        scenario=request.scenario,
+        shots=request.shots,
+    )
+    forensics = analyze_quantum_forensics(experiment["measurements"])
+    predicted = forensics["probable_attack"]
+    detection_correct = (
+        predicted is None
+        if request.scenario == "normal"
+        else predicted == request.scenario.upper()
+    )
+    return QuantumAnalyzeResponse(
+        scenario=request.scenario,
+        shots=request.shots,
+        measurements=experiment["measurements"],
+        forensics=forensics,
+        detection_correct=detection_correct,
     )

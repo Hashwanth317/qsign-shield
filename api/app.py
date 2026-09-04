@@ -1,4 +1,4 @@
-"""FastAPI application entry point for Q-Sign Shield V0.6."""
+"""FastAPI application entry point for Q-Sign Shield V0.6-V0.8."""
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,7 +11,8 @@ app = FastAPI(
     title="Q-Sign Shield API",
     description=(
         "Quantum-inspired digital signature and multi-attack security "
-        "verification simulator for SIH26141."
+        "verification simulator with educational channel forensics for "
+        "SIH26141."
     ),
     version="0.6",
 )

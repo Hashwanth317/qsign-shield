@@ -62,3 +62,18 @@ export function securityCheck(payload) {
     body: JSON.stringify(payload),
   })
 }
+
+export function getQuantumStatus() {
+  return request('/api/quantum/status')
+}
+
+// Keep the V0.8 object form compatible while offering the simpler V0.9 call.
+export function analyzeQuantumChannel(scenario, shots = 1024) {
+  const payload = typeof scenario === 'object' ? scenario : { scenario, shots }
+  return request('/api/quantum/analyze', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export const getQuantumForensicsStatus = getQuantumStatus

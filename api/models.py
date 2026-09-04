@@ -81,3 +81,75 @@ class SecurityCheckResponse(StrictModel):
     sender_identity: str
     signature_owner: str
     transaction_id: str
+
+
+QuantumScenario = Literal[
+    "normal",
+    "bit_flip",
+    "phase_flip",
+    "bit_phase_flip",
+    "intercept_resend",
+    "channel_noise",
+]
+
+
+class QuantumStatusResponse(StrictModel):
+    module: Literal["Quantum Threat Forensics"]
+    status: Literal["ready"]
+    supported_scenarios: list[QuantumScenario]
+
+
+class QuantumAnalyzeRequest(StrictModel):
+    scenario: QuantumScenario
+    shots: int = Field(default=1024, ge=128, le=8192, strict=True)
+
+
+class QuantumMeasurementsResponse(StrictModel):
+    z_basis_counts: dict[str, int]
+    x_basis_counts: dict[str, int]
+    z_basis_error_rate: float
+    x_basis_error_rate: float
+    z_basis_correlation_rate: float
+    x_basis_correlation_rate: float
+    qber: float
+    correlation_rate: float
+    matching_measurements: int
+    mismatching_measurements: int
+    total_measurements: int
+    z_matching_measurements: int
+    z_mismatching_measurements: int
+    x_matching_measurements: int
+    x_mismatching_measurements: int
+    measurement_fidelity: float
+    bell_correlation_score: float
+
+
+class QuantumForensicsResponse(StrictModel):
+    channel_status: Literal["SECURE", "DEGRADED", "COMPROMISED"]
+    attack_detected: bool
+    anomaly_detected: bool
+    probable_attack: Literal[
+        "BIT_FLIP",
+        "PHASE_FLIP",
+        "BIT_PHASE_FLIP",
+        "INTERCEPT_RESEND",
+        "CHANNEL_NOISE",
+    ] | None
+    qber: float
+    z_basis_error_rate: float
+    x_basis_error_rate: float
+    correlation_rate: float
+    measurement_fidelity: float
+    bell_correlation_score: float
+    pauli_anomalies: dict[str, float]
+    dominant_pauli_syndrome: Literal["NONE", "X", "Y", "Z"]
+    risk_level: Literal["LOW", "MEDIUM", "HIGH"]
+    classification_reason: str
+
+
+class QuantumAnalyzeResponse(StrictModel):
+    scenario: QuantumScenario
+    shots: int
+    measurements: QuantumMeasurementsResponse
+    forensics: QuantumForensicsResponse
+    detection_correct: bool

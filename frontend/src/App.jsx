@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import AttackLab from './components/AttackLab'
 import Header from './components/Header'
 import InfoPanel from './components/InfoPanel'
+import QuantumForensics from './components/QuantumForensics'
+import QuantumSecurityFlow from './components/QuantumSecurityFlow'
 import SecurityEvents from './components/SecurityEvents'
 import SecurityFlow from './components/SecurityFlow'
 import SecurityResult from './components/SecurityResult'
@@ -57,15 +59,18 @@ function App() {
   const backendOnline = backendStatus === 'online'
 
   const stats = useMemo(() => {
-    const legitimate = events.filter((event) => event.decision === 'LEGITIMATE').length
-    const blocked = events.filter((event) => event.status === 'BLOCKED').length
+    const transactionEvents = events.filter((event) => event.category === 'TRANSACTION')
+    const quantumEvents = events.filter((event) => event.category === 'QUANTUM')
+    const legitimate = transactionEvents.filter((event) => event.decision === 'LEGITIMATE').length
+    const blocked = transactionEvents.filter((event) => event.status === 'BLOCKED').length
     const processed = legitimate + blocked
 
     return {
-      transactions: events.length,
+      transactions: transactionEvents.length,
       legitimate,
       blocked,
-      securityRate: events.length ? `${Math.round((processed / events.length) * 100)}%` : '—',
+      quantumAlerts: quantumEvents.filter((event) => event.attackDetected).length,
+      securityRate: transactionEvents.length ? `${Math.round((processed / transactionEvents.length) * 100)}%` : '—',
     }
   }, [events])
 
@@ -97,12 +102,28 @@ function App() {
     const event = {
       id: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      category: 'TRANSACTION',
       transactionId: result.transaction_id,
       sender: result.sender_identity,
       attackType: result.attack_type ?? 'NONE',
       verification: result.overall_verification,
       decision: result.security_decision,
       status: result.status,
+    }
+    setEvents((current) => [event, ...current])
+  }
+
+  function recordQuantumEvent(result) {
+    const event = {
+      id: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      category: 'QUANTUM',
+      scenario: result.scenario.toUpperCase(),
+      detected: result.forensics.probable_attack ?? 'NONE',
+      qber: `${result.forensics.qber.toFixed(2)}%`,
+      risk: result.forensics.risk_level,
+      decision: result.forensics.channel_status,
+      attackDetected: result.forensics.attack_detected,
     }
     setEvents((current) => [event, ...current])
   }
@@ -213,6 +234,15 @@ function App() {
 
         <StatsCards stats={stats} />
 
+        <section className="security-layer-heading transaction-layer">
+          <span>01</span>
+          <div>
+            <p className="section-kicker">SECURITY LAYER 01 · TRANSACTION</p>
+            <h2>Quantum Signature Transaction Security</h2>
+            <p>Sign and verify messages, then test forgery, tampering, replay, and identity controls.</p>
+          </div>
+        </section>
+
         <section className="work-grid">
           <SigningPanel
             onSign={handleSign}
@@ -232,12 +262,14 @@ function App() {
 
         <SecurityResult result={latestResult} />
         <AttackLab activeSignature={signedTransaction} activeAction={activeAttack} onRunAttack={handleAttack} backendOnline={backendOnline} />
+        <QuantumForensics backendOnline={backendOnline} onRecordEvent={recordQuantumEvent} />
         <SecurityEvents events={events} />
         <SecurityFlow />
+        <QuantumSecurityFlow />
         <InfoPanel />
       </main>
 
-      <footer>Q-Sign Shield V0.7 · Educational quantum-security simulation for SIH26141</footer>
+      <footer>Q-Sign Shield V0.9 · Educational Qiskit-based quantum-security simulation for SIH26141</footer>
     </div>
   )
 }

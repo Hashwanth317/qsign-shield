@@ -19,24 +19,32 @@ function SecurityEvents({ events }) {
             <thead>
               <tr>
                 <th>Time</th>
-                <th>Transaction ID</th>
-                <th>Sender</th>
-                <th>Attack Type</th>
-                <th>Verification</th>
+                <th>Category</th>
+                <th>Reference</th>
+                <th>Subject</th>
+                <th>Detected</th>
+                <th>Evidence</th>
+                <th>Risk</th>
                 <th>Decision</th>
               </tr>
             </thead>
             <tbody>
-              {events.map((event) => (
-                <tr key={event.id}>
-                  <td>{event.time}</td>
-                  <td><code>{event.transactionId}</code></td>
-                  <td>{event.sender}</td>
-                  <td><span className={`event-type ${event.attackType === 'NONE' ? 'none' : 'attack'}`}>{event.attackType}</span></td>
-                  <td><span className={event.verification === 'PASS' ? 'pass' : 'fail'}>{event.verification}</span></td>
-                  <td>{event.decision}</td>
-                </tr>
-              ))}
+              {events.map((event) => {
+                const quantum = event.category === 'QUANTUM'
+                const detection = quantum ? event.detected : event.attackType
+                return (
+                  <tr key={event.id}>
+                    <td>{event.time}</td>
+                    <td><span className={`event-category ${quantum ? 'quantum' : 'transaction'}`}>{event.category}</span></td>
+                    <td><code>{quantum ? event.scenario : event.transactionId}</code></td>
+                    <td>{quantum ? 'Simulated channel' : event.sender}</td>
+                    <td><span className={`event-type ${detection === 'NONE' ? 'none' : 'attack'}`}>{detection}</span></td>
+                    <td><span className={quantum ? '' : event.verification === 'PASS' ? 'pass' : 'fail'}>{quantum ? `QBER ${event.qber}` : event.verification}</span></td>
+                    <td>{quantum ? event.risk : '—'}</td>
+                    <td>{event.decision}</td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
