@@ -56,12 +56,12 @@ function SigningPanel({ onSign, signedTransaction, isLoading, backendOnline, onF
       <form onSubmit={handleSubmit} className="form-stack">
         <label>
           Sender
-          <input value={sender} onChange={(event) => setSender(event.target.value)} placeholder="Alice" maxLength="64" required />
+          <input value={sender} onChange={(event) => setSender(event.target.value)} placeholder="Hashwanth" maxLength="64" required />
         </label>
         <div className="transaction-field-row">
           <label>
             Receiver
-            <input value={receiver} onChange={(event) => setReceiver(event.target.value)} placeholder="Bob" maxLength="64" required />
+            <input value={receiver} onChange={(event) => setReceiver(event.target.value)} placeholder="Kavin" maxLength="64" required />
           </label>
           <label>
             Amount
@@ -91,7 +91,7 @@ function SigningPanel({ onSign, signedTransaction, isLoading, backendOnline, onF
 
       {signedTransaction && (
         <div className="signature-card">
-          <div className="signature-status"><span className="status-dot online" /> Status: <strong>SIGNED</strong></div>
+          <div className="signature-status"><span className="status-dot online" /><strong>Signature Generated</strong></div>
           <div className="signature-detail"><span>Sender</span><strong>{signedTransaction.sender}</strong></div>
           <div className="signature-detail"><span>Receiver</span><strong>{signedTransaction.receiver}</strong></div>
           <div className="signature-detail"><span>Amount</span><strong>{signedTransaction.amount}</strong></div>
@@ -104,7 +104,7 @@ function SigningPanel({ onSign, signedTransaction, isLoading, backendOnline, onF
               <Copy size={15} /> Copy
             </button>
           </div>
-          <div className="signature-detail"><span>Message Hash</span><code>{signedTransaction.message_hash}</code></div>
+          <div className="signature-detail"><span>SHA-256 Fingerprint</span><code>{signedTransaction.message_hash}</code></div>
         </div>
       )}
     </section>

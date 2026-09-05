@@ -6,6 +6,7 @@ const comparisonMetrics = [
   ['z_basis_error_rate', 'Z-Basis Error'],
   ['x_basis_error_rate', 'X-Basis Error'],
   ['correlation_rate', 'Correlation Rate'],
+  ['measurement_fidelity', 'Measurement Fidelity'],
 ]
 
 function ComparisonSummary({ title, result }) {
@@ -64,4 +65,3 @@ function QuantumComparison({ comparison }) {
 }
 
 export default QuantumComparison
-

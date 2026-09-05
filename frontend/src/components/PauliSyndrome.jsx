@@ -35,9 +35,13 @@ function PauliSyndrome({ forensics }) {
         <div><dt>Dominant Syndrome</dt><dd>{forensics.dominant_pauli_syndrome}</dd></div>
         <div><dt>Probable Threat</dt><dd>{forensics.probable_attack ?? 'NONE'}</dd></div>
       </dl>
+      <div className="pauli-reference">
+        <span><strong>X</strong> Bit Flip</span>
+        <span><strong>Z</strong> Phase Flip</span>
+        <span><strong>Y</strong> Bit + Phase Flip</span>
+      </div>
     </article>
   )
 }
 
 export default PauliSyndrome
-

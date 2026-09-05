@@ -114,9 +114,9 @@ function QuantumForensics({ backendOnline, onRecordEvent }) {
       <div className="quantum-section-header">
         <div className="quantum-title-mark"><RadioTower size={24} /></div>
         <div>
-          <p className="section-kicker">SECURITY LAYER 02 · QUANTUM CHANNEL</p>
-          <h2>Quantum Channel Forensics</h2>
-          <p>Analyze quantum-channel disturbances using multi-basis measurement statistics.</p>
+          <p className="section-kicker">SIMULATED QUANTUM CHANNEL</p>
+          <h2>Measurement-Based Channel Analysis</h2>
+          <p>Analyze simulated disturbances using backend multi-basis measurement statistics.</p>
         </div>
         <span className={`engine-badge ${engineStatus}`}>
           <span className="status-dot" />
@@ -183,7 +183,11 @@ function QuantumForensics({ backendOnline, onRecordEvent }) {
             <article className="detection-explanation">
               <p className="section-kicker">WHY WAS THIS DETECTED?</p>
               <p>{result.forensics.classification_reason}</p>
-              <span>Classification supplied by the backend quantum forensics engine.</span>
+              <dl>
+                <div><dt>Probable Threat</dt><dd>{result.forensics.probable_attack ?? 'NONE'}</dd></div>
+                <div><dt>Likely Disturbance</dt><dd>{result.forensics.dominant_pauli_syndrome}</dd></div>
+              </dl>
+              <span>Probable classification supplied by the backend quantum forensics engine; this does not claim absolute certainty.</span>
             </article>
           )}
 

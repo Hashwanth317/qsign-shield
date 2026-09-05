@@ -56,12 +56,12 @@ function VerificationPanel({ activeSignature, onVerify, isLoading, backendOnline
       <form onSubmit={handleSubmit} className="form-stack">
         <label>
           Claimed Sender
-          <input value={claimedSender} onChange={(event) => setClaimedSender(event.target.value)} placeholder="Alice" maxLength="64" required />
+          <input value={claimedSender} onChange={(event) => setClaimedSender(event.target.value)} placeholder="Hashwanth" maxLength="64" required />
         </label>
         <div className="transaction-field-row">
           <label>
             Receiver
-            <input value={receiver} onChange={(event) => setReceiver(event.target.value)} placeholder="Bob" maxLength="64" required />
+            <input value={receiver} onChange={(event) => setReceiver(event.target.value)} placeholder="Kavin" maxLength="64" required />
           </label>
           <label>
             Amount

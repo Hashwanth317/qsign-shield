@@ -1,11 +1,10 @@
-import { BadgeCheck, BarChart3, RadioTower, ShieldAlert, Target } from 'lucide-react'
+import { BadgeCheck, BarChart3, RadioTower, ShieldAlert } from 'lucide-react'
 
 const cardDefinitions = [
   { key: 'transactions', label: 'Transactions Checked', icon: BarChart3, tone: 'blue' },
-  { key: 'legitimate', label: 'Secure Transactions', icon: BadgeCheck, tone: 'green' },
-  { key: 'blocked', label: 'Classical Attacks Blocked', icon: ShieldAlert, tone: 'red' },
-  { key: 'quantumAlerts', label: 'Quantum Channel Alerts', icon: RadioTower, tone: 'cyan' },
-  { key: 'securityRate', label: 'Security Rate', icon: Target, tone: 'violet' },
+  { key: 'legitimate', label: 'Legitimate Transactions', icon: BadgeCheck, tone: 'green' },
+  { key: 'blocked', label: 'Threats Blocked', icon: ShieldAlert, tone: 'red' },
+  { key: 'quantumAlerts', label: 'Quantum Alerts', icon: RadioTower, tone: 'violet' },
 ]
 
 function StatsCards({ stats }) {

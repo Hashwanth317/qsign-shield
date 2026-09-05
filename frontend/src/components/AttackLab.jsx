@@ -1,4 +1,4 @@
-import { Bug, Fingerprint, LoaderCircle, Repeat2, UserRoundX } from 'lucide-react'
+import { ArrowRight, Bug, Fingerprint, LoaderCircle, Repeat2, ShieldAlert, UserRoundX } from 'lucide-react'
 
 const attackCards = [
   {
@@ -31,25 +31,38 @@ const attackCards = [
   },
 ]
 
-function AttackLab({ activeSignature, activeAction, onRunAttack, backendOnline }) {
+function AttackLab({ activeSignature, activeAction, onRunAttack, backendOnline, onGoToTransactions }) {
+  if (!activeSignature) {
+    return (
+      <section className="empty-workspace">
+        <span className="empty-workspace-icon"><ShieldAlert size={28} /></span>
+        <div>
+          <p className="section-kicker">SIGNED TRANSACTION REQUIRED</p>
+          <h2>Attack simulations are locked</h2>
+          <p>Create and sign a transaction in Transaction Center before running attack simulations.</p>
+        </div>
+        <button className="primary-button" type="button" onClick={onGoToTransactions}>Go to Transaction Center <ArrowRight size={17} /></button>
+      </section>
+    )
+  }
+
   return (
     <section className="attack-lab">
       <div className="section-header">
         <div>
-          <p className="section-kicker">SIH DEMONSTRATION ENVIRONMENT</p>
-          <h2>Attack Lab</h2>
+          <p className="section-kicker">ACTIVE ATTACK SURFACE</p>
+          <h2>Transaction Attack Simulations</h2>
           <p>Each simulation sends a real request to the Q-Sign security engine.</p>
         </div>
-        {!activeSignature && <span className="setup-note">Generate a signature to unlock simulations</span>}
       </div>
 
-      {activeSignature && (
-        <div className="attack-transaction-summary">
-          <span>Active signed transaction</span>
-          <strong>{activeSignature.sender} → {activeSignature.receiver}</strong>
-          <code>{activeSignature.message}</code>
-        </div>
-      )}
+      <dl className="active-transaction-grid">
+        <div><dt>Sender</dt><dd>{activeSignature.sender}</dd></div>
+        <div><dt>Receiver</dt><dd>{activeSignature.receiver}</dd></div>
+        <div><dt>Amount</dt><dd>{activeSignature.amount}</dd></div>
+        <div><dt>Signature ID</dt><dd><code>{activeSignature.signature_id}</code></dd></div>
+        <div className="transaction-message"><dt>Transaction Message</dt><dd><code>{activeSignature.message}</code></dd></div>
+      </dl>
 
       <div className="attack-grid">
         {attackCards.map(({ key, title, description, icon: Icon, button }) => {
@@ -63,7 +76,7 @@ function AttackLab({ activeSignature, activeAction, onRunAttack, backendOnline }
                 className="attack-button"
                 type="button"
                 onClick={() => onRunAttack(key)}
-                disabled={!activeSignature || !backendOnline || Boolean(activeAction)}
+                disabled={!backendOnline || Boolean(activeAction)}
               >
                 {loading && <LoaderCircle size={15} className="spin" />}
                 {loading ? 'Running Simulation…' : button}

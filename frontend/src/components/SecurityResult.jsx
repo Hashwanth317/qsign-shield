@@ -1,5 +1,12 @@
 import { CheckCircle2, ShieldAlert, ShieldCheck } from 'lucide-react'
 
+const REASONS = {
+  FORGERY: 'Transaction data was modified after signing.',
+  SIGNATURE_TAMPERING: 'Signature data does not match the original signature.',
+  REPLAY: 'This valid transaction has already been processed.',
+  IMPERSONATION: 'Claimed sender does not match the signature owner.',
+}
+
 function Flag({ label, value, positive }) {
   return (
     <div className="result-metric">
@@ -9,7 +16,7 @@ function Flag({ label, value, positive }) {
   )
 }
 
-function SecurityResult({ result }) {
+function SecurityResult({ result, signedTransaction }) {
   if (!result) {
     return (
       <section className="security-result empty-result">
@@ -24,7 +31,15 @@ function SecurityResult({ result }) {
   }
 
   const secure = result.overall_verification === 'PASS'
-  const attackLabel = result.attack_type?.replaceAll('_', ' ') || 'NONE'
+  const attackType = result.attack_type ?? 'LEGITIMATE'
+  const attackLabel = attackType.replaceAll('_', ' ')
+  const messageIntegrity = attackType === 'FORGERY' ? 'FAIL' : 'PASS'
+  const signatureIntegrity = result.cryptographic_signature
+  const replayCheck = attackType === 'REPLAY' ? 'FAIL' : 'PASS'
+  const reason = REASONS[attackType] ?? 'All integrity, identity, and signature checks passed.'
+  const timestamp = result.evaluated_at
+    ? new Date(result.evaluated_at).toLocaleString()
+    : new Date().toLocaleString()
 
   return (
     <section className={`security-result ${secure ? 'secure' : 'threat'}`}>
@@ -37,7 +52,7 @@ function SecurityResult({ result }) {
         <span className={`decision-badge ${secure ? 'safe' : 'danger'}`}>{secure ? 'ACCEPTED' : 'BLOCKED'}</span>
       </div>
 
-      {!secure && <div className="attack-callout">Attack Type: <strong>{attackLabel}</strong></div>}
+      {!secure && <div className="attack-callout">Threat Type: <strong>{attackLabel}</strong></div>}
       {result.attack_context?.type === 'FORGERY' && (
         <div className="forgery-evidence">
           <div><span>Original Amount</span><strong>{result.attack_context.originalAmount}</strong></div>
@@ -46,14 +61,44 @@ function SecurityResult({ result }) {
           <div><span>Forged Transaction</span><code>{result.attack_context.forgedMessage}</code></div>
         </div>
       )}
+      {result.attack_context?.type === 'REPLAY' && (
+        <div className="replay-evidence">
+          <div><span>First Submission</span><strong>{result.attack_context.firstSubmission}</strong></div>
+          <div><span>Repeated Submission</span><strong className="fail">{result.attack_context.repeatedSubmission}</strong></div>
+        </div>
+      )}
       <div className="result-grid">
-        <Flag label="Cryptographic Signature" value={result.cryptographic_signature} positive={result.cryptographic_signature === 'PASS'} />
+        <Flag label="Message Integrity" value={messageIntegrity} positive={messageIntegrity === 'PASS'} />
+        <Flag label="Signature Integrity" value={signatureIntegrity} positive={signatureIntegrity === 'PASS'} />
         <Flag label="Identity Match" value={result.identity_match ? 'PASS' : 'FAIL'} positive={result.identity_match} />
+        <Flag label="Replay Check" value={replayCheck} positive={replayCheck === 'PASS'} />
         <Flag label="Overall Verification" value={result.overall_verification} positive={secure} />
         <Flag label="Matching Bits" value={`${result.matching_bits} / ${result.total_bits}`} positive={result.matching_bits === result.total_bits} />
         <Flag label="Verification Percentage" value={`${result.verification_percentage}%`} positive={result.verification_percentage === 100} />
       </div>
-      <div className="decision-text">{result.security_decision}</div>
+      {attackType === 'IMPERSONATION' && (
+        <div className="identity-evidence">
+          <div><span>Cryptographic Signature</span><strong className={signatureIntegrity === 'PASS' ? 'pass' : 'fail'}>{signatureIntegrity}</strong></div>
+          <div><span>Claimed Sender</span><strong>{result.sender_identity}</strong></div>
+          <div><span>Signature Owner</span><strong>{result.signature_owner}</strong></div>
+        </div>
+      )}
+      <div className="decision-text"><span>Security Decision</span><strong>{result.security_decision}</strong></div>
+
+      {!secure && (
+        <div className="threat-detail-card">
+          <div><span>Risk Level</span><strong className="risk-high">HIGH</strong></div>
+          <div><span>Reason</span><strong>{reason}</strong></div>
+          <div><span>Transaction ID</span><code>{result.transaction_id}</code></div>
+          <div><span>Sender</span><strong>{result.sender_identity}</strong></div>
+          <div><span>Receiver</span><strong>{signedTransaction?.receiver ?? '—'}</strong></div>
+          <div><span>Amount</span><strong>{signedTransaction?.amount ?? '—'}</strong></div>
+          <div><span>Verification Result</span><strong className="fail">{result.overall_verification}</strong></div>
+          <div><span>System Action</span><strong className="fail">BLOCKED</strong></div>
+          <div><span>Recommended Action</span><strong>Do not process this transaction.</strong></div>
+          <div><span>Timestamp</span><strong>{timestamp}</strong></div>
+        </div>
+      )}
     </section>
   )
 }

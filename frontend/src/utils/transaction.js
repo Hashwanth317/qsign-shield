@@ -1,6 +1,6 @@
 export const DEFAULT_TRANSACTION = {
-  sender: 'Alice',
-  receiver: 'Bob',
+  sender: 'Hashwanth',
+  receiver: 'Kavin',
   amount: '10000',
 }
 
@@ -37,4 +37,3 @@ export function transactionFieldsAreValid({ sender, receiver, amount }) {
 export function forgedTransactionAmount(originalAmount) {
   return normalizeAmount(originalAmount) === '90000' ? '90001' : '90000'
 }
-
