@@ -26,40 +26,6 @@ code { font-family: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace; f
     #06101d;
 }
 
-.login-shell {
-  position: relative; display: grid; place-items: center; width: 100%; min-height: 100vh; padding: 28px;
-  background:
-    radial-gradient(circle at 50% 5%, rgba(48, 152, 200, 0.2), transparent 28rem),
-    radial-gradient(circle at 85% 85%, rgba(40, 183, 151, 0.1), transparent 24rem),
-    #06101d;
-}
-.login-shell::before {
-  position: absolute; inset: 0; opacity: 0.24; pointer-events: none; content: '';
-  background-image: linear-gradient(rgba(104, 183, 219, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(104, 183, 219, 0.08) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: linear-gradient(to bottom, black, transparent 85%);
-}
-.login-card {
-  position: relative; z-index: 1; width: min(440px, 100%); padding: 38px;
-  border: 1px solid rgba(103, 203, 237, 0.25); border-radius: 18px;
-  background: rgba(8, 23, 39, 0.9); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.32), inset 0 1px rgba(175, 232, 249, 0.05);
-}
-.login-brand-mark {
-  display: grid; place-items: center; width: 62px; height: 62px; margin-bottom: 24px;
-  border: 1px solid rgba(105, 208, 238, 0.45); border-radius: 17px; color: #78e5ff;
-  background: linear-gradient(145deg, rgba(47, 119, 170, 0.38), rgba(12, 38, 55, 0.72));
-}
-.login-card h1 { margin: 7px 0 3px; font-size: 31px; letter-spacing: -0.045em; }
-.login-subtitle { margin: 0; color: #98afc1; font-size: 14px; }
-.login-form { display: grid; gap: 17px; margin-top: 30px; }
-.login-form > label { display: grid; gap: 8px; color: #bed0dd; font-size: 12px; font-weight: 700; }
-.login-input-wrap { position: relative; display: flex; align-items: center; }
-.login-input-wrap > svg { position: absolute; left: 13px; z-index: 1; color: #6da9c3; pointer-events: none; }
-.login-input-wrap input { min-height: 46px; padding-left: 42px; }
-.login-error { margin: 0; padding: 10px 12px; border: 1px solid rgba(255, 116, 92, 0.35); border-radius: 8px; color: #ffc1b4; background: rgba(179, 56, 44, 0.14); font-size: 12px; }
-.login-button { width: 100%; min-height: 46px; margin-top: 3px; }
-.prototype-access { margin: 25px 0 0; padding-top: 19px; border-top: 1px solid rgba(151, 182, 209, 0.13); color: #6f8fa4; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-align: center; text-transform: uppercase; }
-
 .topbar {
   width: min(1380px, calc(100% - 48px));
   min-height: 110px;
@@ -83,26 +49,11 @@ code { font-family: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace; f
 }
 .brand h1 { margin: 2px 0; font-size: 24px; line-height: 1.1; letter-spacing: -0.04em; }
 .subtitle { margin: 0; color: #8fa7bc; font-size: 12px; }
-.topbar-actions { display: flex; align-items: center; gap: 10px; }
 .system-status {
   display: flex; align-items: center; gap: 8px; padding: 9px 9px 9px 13px;
   border: 1px solid rgba(151, 182, 209, 0.18); border-radius: 10px;
   color: #b6c9da; background: rgba(12, 28, 45, 0.63); font-size: 13px;
 }
-.user-menu {
-  display: flex; align-items: center; gap: 9px; min-height: 48px; padding: 7px 8px 7px 12px;
-  border: 1px solid rgba(151, 182, 209, 0.18); border-radius: 10px; color: #85cfe7;
-  background: rgba(12, 28, 45, 0.63);
-}
-.user-menu div { display: grid; min-width: 92px; }
-.user-menu strong { color: #e8f4fa; font-size: 12px; font-weight: 700; }
-.user-menu span { color: #829eb2; font-family: 'DM Mono', monospace; font-size: 9px; text-transform: uppercase; }
-.logout-button {
-  display: inline-flex; align-items: center; gap: 5px; min-height: 32px; padding: 0 9px;
-  border: 1px solid rgba(116, 205, 231, 0.22); border-radius: 7px; color: #a8d8e8;
-  background: rgba(53, 135, 164, 0.1); font-size: 10px; font-weight: 700; text-transform: uppercase;
-}
-.logout-button:hover { color: #eefbff; background: rgba(69, 165, 197, 0.18); }
 .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #8fa7bc; }
 .status-dot.online { background: #4ee3a5; box-shadow: 0 0 0 4px rgba(78, 227, 165, 0.1); }
 .status-dot.offline { background: #ff826f; box-shadow: 0 0 0 4px rgba(255, 130, 111, 0.1); }
@@ -190,12 +141,6 @@ select { appearance: none; cursor: pointer; background-image: linear-gradient(45
 .decision-badge.safe { color: #9cf0c8; background: rgba(53, 189, 124, 0.17); }
 .decision-badge.danger { color: #ffb2a3; background: rgba(211, 77, 56, 0.18); }
 .attack-callout { margin: 19px 0 14px; padding: 10px 12px; border-left: 3px solid #fb886e; color: #ffc4b7; background: rgba(151, 47, 37, 0.14); font-size: 13px; }
-.threat-detail-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0; }
-.threat-detail-grid > div { min-width: 0; padding: 11px; border: 1px solid rgba(255, 144, 116, 0.15); border-radius: 7px; background: rgba(139, 49, 37, 0.08); }
-.threat-detail-grid span { display: block; margin-bottom: 6px; color: #ac8e8a; font-size: 9px; text-transform: uppercase; }
-.threat-detail-grid strong, .threat-detail-grid code { display: block; overflow-wrap: anywhere; color: #f4ded9; font-size: 11px; }
-.threat-detail-grid strong.fail { color: #ff9c88; }
-.threat-detail-wide { grid-column: span 2; }
 .result-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 20px; }
 .result-metric { min-height: 70px; padding: 13px; border: 1px solid rgba(155, 189, 219, 0.13); border-radius: 8px; background: rgba(3, 14, 25, 0.36); }
 .result-metric span { display: block; margin-bottom: 7px; color: #8da9bc; font-size: 11px; }
@@ -407,8 +352,6 @@ td:first-child, th:first-child { padding-left: 0; }
 footer { width: min(1380px, calc(100% - 48px)); margin: 0 auto; padding: 20px 0 32px; border-top: 1px solid rgba(151, 182, 209, 0.13); color: #6f8a9d; font-family: 'DM Mono', monospace; font-size: 10px; }
 
 @media (max-width: 1080px) {
-  .topbar { align-items: flex-start; }
-  .topbar-actions { align-items: stretch; flex-direction: column; }
   .stats-grid, .attack-grid { grid-template-columns: repeat(2, 1fr); }
   .result-grid { grid-template-columns: repeat(2, 1fr); }
   .info-panel ol { grid-template-columns: repeat(3, 1fr); }
@@ -417,14 +360,11 @@ footer { width: min(1380px, calc(100% - 48px)); margin: 0 auto; padding: 20px 0 
   .quantum-run-button, .quantum-compare-button { width: 100%; }
   .quantum-metric-grid { grid-template-columns: repeat(3, 1fr); }
   .forgery-evidence { grid-template-columns: 1fr 1fr; }
-  .threat-detail-grid { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 720px) {
   .topbar, main, .feedback, .offline-banner, footer { width: min(100% - 28px, 1380px); }
   .topbar { min-height: auto; padding: 20px 0; align-items: flex-start; flex-direction: column; }
-  .topbar-actions, .system-status, .user-menu { width: 100%; }
-  .system-status { justify-content: flex-start; }
-  .user-menu div { flex: 1; }
+  .system-status { width: 100%; justify-content: flex-start; }
   main { padding-top: 25px; }
   .hero-strip { display: block; padding-bottom: 22px; }
   .hero-strip > p { margin-top: 14px; }
@@ -438,8 +378,6 @@ footer { width: min(1380px, calc(100% - 48px)); margin: 0 auto; padding: 20px 0 
   .info-panel ol { gap: 12px; }
   .attack-card { min-height: 175px; }
   .transaction-field-row, .forgery-evidence { grid-template-columns: 1fr; }
-  .threat-detail-grid { grid-template-columns: 1fr; }
-  .threat-detail-wide { grid-column: auto; }
   .attack-transaction-summary { grid-template-columns: 1fr; gap: 5px; }
   .attack-transaction-summary code { white-space: normal; }
   .security-layer-heading { align-items: flex-start; padding: 15px; }
@@ -453,8 +391,6 @@ footer { width: min(1380px, calc(100% - 48px)); margin: 0 auto; padding: 20px 0 
   .versus { text-align: center; }
 }
 @media (max-width: 460px) {
-  .login-shell { padding: 16px; }
-  .login-card { padding: 27px 22px; }
   .quantum-status-facts, .quantum-metric-grid, .measurement-summary, .count-grid { grid-template-columns: 1fr; }
   .engine-badge { margin-left: 0; }
   .basis-row, .syndrome-row { grid-template-columns: 70px minmax(0, 1fr) 58px; }

@@ -1,29 +1,11 @@
-"""FastAPI application entry point for Q-Sign Shield."""
-
-import logging
-from contextlib import asynccontextmanager
+"""FastAPI application entry point for Q-Sign Shield V0.6-V0.8."""
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.exc import SQLAlchemyError
 
-from api.auth_routes import router as auth_router
-from api.database import init_db
+
 from api.models import HealthResponse, RootResponse
 from api.routes import router
-
-
-logger = logging.getLogger(__name__)
-
-
-@asynccontextmanager
-async def lifespan(_: FastAPI):
-    """Initialize persistent tables without exposing connection details."""
-    try:
-        init_db()
-    except (RuntimeError, SQLAlchemyError):
-        logger.error("Authentication database initialization failed.")
-    yield
 
 
 app = FastAPI(
@@ -34,7 +16,6 @@ app = FastAPI(
         "SIH26141."
     ),
     version="0.6",
-    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -46,8 +27,8 @@ app.add_middleware(
     ],
     allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -63,5 +44,4 @@ def health_check() -> HealthResponse:
     return HealthResponse(status="healthy")
 
 
-app.include_router(auth_router)
 app.include_router(router)
