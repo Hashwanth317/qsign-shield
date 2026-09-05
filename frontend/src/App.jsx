@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import AttackLab from './components/AttackLab'
 import Header from './components/Header'
 import InfoPanel from './components/InfoPanel'
+import LoginPage from './components/LoginPage'
 import QuantumForensics from './components/QuantumForensics'
 import QuantumSecurityFlow from './components/QuantumSecurityFlow'
 import SecurityEvents from './components/SecurityEvents'
@@ -10,7 +11,17 @@ import SecurityResult from './components/SecurityResult'
 import SigningPanel from './components/SigningPanel'
 import StatsCards from './components/StatsCards'
 import VerificationPanel from './components/VerificationPanel'
-import { checkHealth, securityCheck, signMessage, verifyTransaction } from './services/api'
+import {
+  AUTH_EXPIRED_EVENT,
+  checkHealth,
+  getCurrentUser,
+  login,
+  logout,
+  readAuthSession,
+  securityCheck,
+  signMessage,
+  verifyTransaction,
+} from './services/api'
 import { buildTransactionMessage, forgedTransactionAmount } from './utils/transaction'
 
 const ATTACK_BY_DECISION = {
@@ -20,9 +31,33 @@ const ATTACK_BY_DECISION = {
   'IMPERSONATION ATTACK DETECTED': 'IMPERSONATION',
 }
 
+const THREAT_GUIDANCE = {
+  FORGERY: {
+    risk_level: 'HIGH',
+    reason: 'Transaction content does not match the signed message.',
+    recommended_action: 'Do not process this transaction.',
+  },
+  SIGNATURE_TAMPERING: {
+    risk_level: 'HIGH',
+    reason: 'Presented signature bits differ from the stored quantum signature.',
+    recommended_action: 'Reject the signature and request a newly signed transaction.',
+  },
+  REPLAY: {
+    risk_level: 'HIGH',
+    reason: 'This transaction and signature combination was already submitted.',
+    recommended_action: 'Reject the duplicate and investigate the repeated submission.',
+  },
+  IMPERSONATION: {
+    risk_level: 'HIGH',
+    reason: 'The claimed sender does not match the signature owner.',
+    recommended_action: 'Block the request and verify the sender identity.',
+  },
+}
+
 function normalizeResult(data, context) {
   const overallVerification = data.overall_verification ?? data.verification
   const attackType = data.attack_type ?? ATTACK_BY_DECISION[data.security_decision] ?? null
+  const guidance = THREAT_GUIDANCE[attackType]
 
   return {
     ...data,
@@ -32,6 +67,13 @@ function normalizeResult(data, context) {
     sender_identity: data.sender_identity ?? context.claimed_sender,
     signature_owner: data.signature_owner ?? context.signature_owner,
     transaction_id: data.transaction_id ?? context.signature_id,
+    receiver: context.receiver ?? '—',
+    amount: context.amount ?? '—',
+    risk_level: guidance?.risk_level ?? (overallVerification === 'PASS' ? 'LOW' : 'HIGH'),
+    reason: guidance?.reason ?? data.security_decision,
+    system_action: overallVerification === 'PASS' ? 'ACCEPTED' : 'BLOCKED',
+    recommended_action: guidance?.recommended_action ?? 'Continue normal transaction processing.',
+    timestamp: new Date().toLocaleString(),
   }
 }
 
@@ -42,7 +84,7 @@ function tamperedBits(bits) {
     .join('')
 }
 
-function App() {
+function Dashboard({ currentUser, onLogout }) {
   const [backendStatus, setBackendStatus] = useState('checking')
   const [signedTransaction, setSignedTransaction] = useState(null)
   const [latestResult, setLatestResult] = useState(null)
@@ -53,6 +95,7 @@ function App() {
   const [activeAttack, setActiveAttack] = useState(null)
 
   const backendOnline = backendStatus === 'online'
+  const securityOperator = currentUser.role === 'security_operator'
 
   const stats = useMemo(() => {
     const transactionEvents = events.filter((event) => event.category === 'TRANSACTION')
@@ -128,6 +171,8 @@ function App() {
     return {
       ...payload,
       signature_owner: signedTransaction?.signature_owner,
+      receiver: payload.receiver ?? signedTransaction?.receiver,
+      amount: payload.amount ?? signedTransaction?.amount,
     }
   }
 
@@ -234,7 +279,12 @@ function App() {
 
   return (
     <div className="app-shell">
-      <Header backendStatus={backendStatus} onRefresh={refreshHealth} />
+      <Header
+        backendStatus={backendStatus}
+        onRefresh={refreshHealth}
+        currentUser={currentUser}
+        onLogout={onLogout}
+      />
 
       {feedback && <div className={`feedback ${feedback.type}`} role="status">{feedback.message}</div>}
       {!backendOnline && backendStatus === 'offline' && (
@@ -250,7 +300,7 @@ function App() {
           <p>All results below are returned by the existing Q-Sign Shield backend.</p>
         </section>
 
-        <StatsCards stats={stats} />
+        {securityOperator && <StatsCards stats={stats} />}
 
         <section className="security-layer-heading transaction-layer">
           <span>01</span>
@@ -279,17 +329,134 @@ function App() {
         </section>
 
         <SecurityResult result={latestResult} />
-        <AttackLab activeSignature={signedTransaction} activeAction={activeAttack} onRunAttack={handleAttack} backendOnline={backendOnline} />
-        <QuantumForensics backendOnline={backendOnline} onRecordEvent={recordQuantumEvent} />
-        <SecurityEvents events={events} />
-        <SecurityFlow />
-        <QuantumSecurityFlow />
-        <InfoPanel />
+        {securityOperator && (
+          <>
+            <AttackLab activeSignature={signedTransaction} activeAction={activeAttack} onRunAttack={handleAttack} backendOnline={backendOnline} />
+            <QuantumForensics backendOnline={backendOnline} onRecordEvent={recordQuantumEvent} />
+            <SecurityEvents events={events} />
+            <SecurityFlow />
+            <QuantumSecurityFlow />
+            <InfoPanel />
+          </>
+        )}
       </main>
 
       <footer>Q-Sign Shield V0.9 · Educational Qiskit-based quantum-security simulation for SIH26141</footer>
     </div>
   )
+}
+
+function navigateTo(path) {
+  if (globalThis.location?.pathname !== path) {
+    globalThis.history?.replaceState(null, '', path)
+  }
+}
+
+function App() {
+  const [initialSession] = useState(readAuthSession)
+  const [authStatus, setAuthStatus] = useState(
+    initialSession ? 'validating' : 'signed_out',
+  )
+  const [currentUser, setCurrentUser] = useState(null)
+  const [loginError, setLoginError] = useState(null)
+  const [signingIn, setSigningIn] = useState(false)
+
+  useEffect(() => {
+    let active = true
+
+    async function restoreSession() {
+      if (!initialSession) {
+        navigateTo('/login')
+        return
+      }
+
+      try {
+        const user = await getCurrentUser()
+        if (!active) return
+        setCurrentUser(user)
+        setAuthStatus('authenticated')
+        navigateTo('/dashboard')
+      } catch (error) {
+        if (!active) return
+        logout()
+        setCurrentUser(null)
+        setAuthStatus('signed_out')
+        setLoginError(
+          error.status === 0
+            ? 'Unable to connect to Q-Sign Security Engine.'
+            : 'Your secure session has expired. Please sign in again.',
+        )
+        navigateTo('/login')
+      }
+    }
+
+    restoreSession()
+    return () => { active = false }
+  }, [initialSession])
+
+  useEffect(() => {
+    function handleExpiredSession() {
+      logout()
+      setCurrentUser(null)
+      setAuthStatus('signed_out')
+      setLoginError('Your secure session has expired. Please sign in again.')
+      navigateTo('/login')
+    }
+
+    globalThis.addEventListener?.(AUTH_EXPIRED_EVENT, handleExpiredSession)
+    return () => globalThis.removeEventListener?.(AUTH_EXPIRED_EVENT, handleExpiredSession)
+  }, [])
+
+  useEffect(() => {
+    function protectRoute() {
+      navigateTo(currentUser ? '/dashboard' : '/login')
+    }
+
+    globalThis.addEventListener?.('popstate', protectRoute)
+    return () => globalThis.removeEventListener?.('popstate', protectRoute)
+  }, [currentUser])
+
+  async function handleSignIn(credentials) {
+    setSigningIn(true)
+    setLoginError(null)
+    try {
+      const response = await login(credentials)
+      setCurrentUser(response.user)
+      setAuthStatus('authenticated')
+      navigateTo('/dashboard')
+    } catch (error) {
+      if (error.status === 401) {
+        setLoginError('Invalid username or password.')
+      } else if (error.status === 0) {
+        setLoginError('Unable to connect to Q-Sign Security Engine.')
+      } else {
+        setLoginError(error.message)
+      }
+    } finally {
+      setSigningIn(false)
+    }
+  }
+
+  function handleLogout() {
+    logout()
+    setCurrentUser(null)
+    setAuthStatus('signed_out')
+    setLoginError(null)
+    navigateTo('/login')
+  }
+
+  if (authStatus !== 'authenticated' || !currentUser) {
+    return (
+      <LoginPage
+        onSignIn={handleSignIn}
+        isLoading={signingIn}
+        error={loginError}
+        validatingSession={authStatus === 'validating'}
+      />
+    )
+  }
+
+  return <Dashboard currentUser={currentUser} onLogout={handleLogout} />
 }
 
 export default App

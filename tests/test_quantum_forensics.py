@@ -4,6 +4,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 from api.app import app
+from api.auth import get_current_user
+from api.auth_models import UserRole
+from api.user_models import User
 from quantum.channel import run_quantum_channel_experiment
 from quantum.measurements import calculate_channel_metrics
 from security.quantum_forensics import analyze_quantum_forensics
@@ -18,6 +21,21 @@ SCENARIOS = (
     "intercept_resend",
     "channel_noise",
 )
+
+
+@pytest.fixture(autouse=True)
+def authorized_operator() -> None:
+    operator = User(
+        id=1,
+        username="operator",
+        email="operator@example.com",
+        password_hash="not-used-by-dependency-override",
+        role=UserRole.SECURITY_OPERATOR.value,
+        is_active=True,
+    )
+    app.dependency_overrides[get_current_user] = lambda: operator
+    yield
+    app.dependency_overrides.pop(get_current_user, None)
 
 
 @pytest.fixture(scope="module")
@@ -213,4 +231,3 @@ def test_malformed_quantum_request_is_rejected() -> None:
         "/api/quantum/analyze",
         json={"scenario": "normal", "shots": "1024"},
     ).status_code == 422
-

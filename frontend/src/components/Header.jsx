@@ -1,6 +1,10 @@
-import { Activity, RefreshCw, ShieldCheck } from 'lucide-react'
+import { Activity, LogOut, RefreshCw, ShieldCheck, UserRound } from 'lucide-react'
 
-function Header({ backendStatus, onRefresh }) {
+function roleLabel(role) {
+  return role === 'security_operator' ? 'Security Operator' : 'Transaction User'
+}
+
+function Header({ backendStatus, onRefresh, currentUser, onLogout }) {
   const online = backendStatus === 'online'
   const checking = backendStatus === 'checking'
 
@@ -17,19 +21,31 @@ function Header({ backendStatus, onRefresh }) {
         </div>
       </div>
 
-      <div className="system-status" aria-live="polite">
-        <span className={`status-dot ${online ? 'online' : 'offline'}`} />
-        <Activity size={16} />
-        <span>{online ? 'System Online' : checking ? 'Checking Backend' : 'Backend Offline'}</span>
-        <button
-          className="icon-button"
-          type="button"
-          onClick={onRefresh}
-          aria-label="Refresh backend status"
-          disabled={checking}
-        >
-          <RefreshCw size={16} className={checking ? 'spin' : ''} />
-        </button>
+      <div className="topbar-actions">
+        <div className="system-status" aria-live="polite">
+          <span className={`status-dot ${online ? 'online' : 'offline'}`} />
+          <Activity size={16} />
+          <span>{online ? 'System Online' : checking ? 'Checking Backend' : 'Backend Offline'}</span>
+          <button
+            className="icon-button"
+            type="button"
+            onClick={onRefresh}
+            aria-label="Refresh backend status"
+            disabled={checking}
+          >
+            <RefreshCw size={16} className={checking ? 'spin' : ''} />
+          </button>
+        </div>
+        <div className="user-menu">
+          <UserRound size={18} aria-hidden="true" />
+          <div>
+            <strong>{currentUser.username}</strong>
+            <span>{roleLabel(currentUser.role)}</span>
+          </div>
+          <button className="logout-button" type="button" onClick={onLogout}>
+            <LogOut size={15} /> Logout
+          </button>
+        </div>
       </div>
     </header>
   )

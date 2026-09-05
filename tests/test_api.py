@@ -4,7 +4,10 @@ import pytest
 from fastapi.testclient import TestClient
 
 from api.app import app
+from api.auth import get_current_user
+from api.auth_models import UserRole
 from api.routes import reset_api_state
+from api.user_models import User
 
 
 client = TestClient(app)
@@ -14,9 +17,19 @@ FORGED_MESSAGE = "TRANSFER 90000 TO BOB"
 
 @pytest.fixture(autouse=True)
 def isolated_api_state() -> None:
+    operator = User(
+        id=1,
+        username="operator",
+        email="operator@example.com",
+        password_hash="not-used-by-dependency-override",
+        role=UserRole.SECURITY_OPERATOR.value,
+        is_active=True,
+    )
+    app.dependency_overrides[get_current_user] = lambda: operator
     reset_api_state()
     yield
     reset_api_state()
+    app.dependency_overrides.pop(get_current_user, None)
 
 
 def sign_message() -> dict:

@@ -5,3 +5,9 @@ pytest==9.1.1
 qiskit==2.5.2
 qiskit-aer==0.17.2
 uvicorn==0.52.4
+SQLAlchemy==2.0.43
+PyJWT==2.10.1
+argon2-cffi==25.1.0
+email-validator==2.3.0
+psycopg[binary]==3.2.10
+python-dotenv==1.1.1

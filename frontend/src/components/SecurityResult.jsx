@@ -38,6 +38,20 @@ function SecurityResult({ result }) {
       </div>
 
       {!secure && <div className="attack-callout">Attack Type: <strong>{attackLabel}</strong></div>}
+      {!secure && (
+        <div className="threat-detail-grid">
+          <div><span>Risk Level</span><strong className="fail">{result.risk_level}</strong></div>
+          <div><span>Transaction ID</span><code>{result.transaction_id}</code></div>
+          <div><span>Sender</span><strong>{result.sender_identity}</strong></div>
+          <div><span>Receiver</span><strong>{result.receiver}</strong></div>
+          <div><span>Amount</span><strong>{result.amount}</strong></div>
+          <div><span>Verification Result</span><strong className="fail">{result.overall_verification}</strong></div>
+          <div><span>System Action</span><strong className="fail">{result.system_action}</strong></div>
+          <div><span>Timestamp</span><strong>{result.timestamp}</strong></div>
+          <div className="threat-detail-wide"><span>Reason</span><strong>{result.reason}</strong></div>
+          <div className="threat-detail-wide"><span>Recommended Action</span><strong>{result.recommended_action}</strong></div>
+        </div>
+      )}
       {result.attack_context?.type === 'FORGERY' && (
         <div className="forgery-evidence">
           <div><span>Original Amount</span><strong>{result.attack_context.originalAmount}</strong></div>

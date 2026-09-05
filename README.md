@@ -4,6 +4,10 @@ Q-Sign Shield is an educational SIH26141 prototype that combines a Qiskit Aer
 quantum-teleportation simulation, simulated quantum digital signatures,
 multi-attack transaction checks, a FastAPI backend, and a React dashboard.
 
+The application also includes PostgreSQL-backed user accounts, Argon2id
+password hashing, JWT access tokens, protected dashboard routes, and backend
+role enforcement for transaction users and security operators.
+
 ## Current modules
 
 - V0.1: quantum teleportation
@@ -15,6 +19,66 @@ multi-attack transaction checks, a FastAPI backend, and a React dashboard.
 - V0.7: React dashboard
 - V0.8: quantum-channel threat forensics
 - V0.9: React quantum-forensics dashboard integration
+
+## Authentication and roles
+
+- **Transaction users** can sign and verify transactions and view their result.
+- **Security operators** can also run attack simulations, inspect security
+  events, and access quantum-channel forensics.
+- Public registration creates transaction users. Security-operator registration
+  is disabled unless `ALLOW_OPERATOR_REGISTRATION=true`; the demo seed script is
+  the preferred prototype setup path.
+- Passwords are stored only as Argon2id hashes. JWTs contain the user subject and
+  role and expire after the configured access-token lifetime.
+
+The authentication API is:
+
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/me`
+
+`/health`, registration, and login are public. Transaction signing and
+verification require an active authenticated user. Security checks and quantum
+forensics require the `security_operator` role.
+
+## PostgreSQL and environment setup
+
+Create a PostgreSQL database locally, on Render, or on Neon. Copy the example
+configuration without committing the resulting `.env` file:
+
+```bash
+cp .env.example .env
+```
+
+Set these backend values:
+
+- `DATABASE_URL`: PostgreSQL URL; `postgres://` and `postgresql://` Render/Neon
+  forms are normalized to the psycopg 3 driver.
+- `JWT_SECRET_KEY`: a long random deployment secret.
+- `JWT_ALGORITHM`: `HS256` by default.
+- `ACCESS_TOKEN_EXPIRE_MINUTES`: `60` by default.
+- `DEMO_USER_PASSWORD` and `DEMO_OPERATOR_PASSWORD`: required only while
+  running the demo seed command.
+
+The frontend uses `frontend/.env` with:
+
+```bash
+VITE_API_BASE_URL=http://127.0.0.1:8000
+```
+
+Production must set `VITE_API_BASE_URL` to the deployed Render API URL.
+
+## Seed demo users
+
+After setting both demo password variables, run the idempotent seed command:
+
+```bash
+python -m scripts.seed_users
+```
+
+It creates `user` with role `transaction_user` and `operator` with role
+`security_operator` only when they do not already exist. It never prints
+passwords, hashes, or secrets.
 
 ## V0.8 Quantum Channel Threat Forensics
 
@@ -66,10 +130,35 @@ hardware calibration are outside this prototype.
 
 ```bash
 source .venv/bin/activate
+pip install -r requirements.txt
+python -m scripts.seed_users
 python -m pytest
 python demo_quantum_forensics.py
-python -m uvicorn api.app:app --reload
+python -m uvicorn api.app:app --reload --env-file .env
 ```
+
+Run the frontend separately:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+## Render and Vercel deployment
+
+For Render, attach a PostgreSQL database and configure `DATABASE_URL`,
+`JWT_SECRET_KEY`, `JWT_ALGORITHM`, and `ACCESS_TOKEN_EXPIRE_MINUTES`. Use
+`pip install -r requirements.txt` as the build command and
+`uvicorn api.app:app --host 0.0.0.0 --port $PORT` as the start command. Run
+`python -m scripts.seed_users` once from a secure Render shell if demo accounts
+are required.
+
+For Vercel, keep the project root set to `frontend`, build with `npm run build`,
+publish `dist`, and set `VITE_API_BASE_URL` to the Render service URL. The
+included `frontend/vercel.json` preserves `/login` and `/dashboard` on direct
+loads and refreshes. The FastAPI CORS configuration already allows
+`https://qsign-shield.vercel.app` and Vercel preview domains.
 
 The V0.8 API endpoints are:
 

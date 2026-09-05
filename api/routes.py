@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
+from api.auth import get_current_user, require_security_operator
 from api.models import (
     QuantumAnalyzeRequest,
     QuantumAnalyzeResponse,
@@ -19,6 +20,7 @@ from api.models import (
 )
 from attacks.quantum_channel import SUPPORTED_QUANTUM_SCENARIOS
 from api.registry import SignatureRegistry
+from api.user_models import User
 from quantum.channel import run_quantum_channel_experiment
 from quantum.qds import generate_quantum_signature
 from security.detector import detect_security_event
@@ -97,7 +99,10 @@ def _detect(
         "teleportation workflow and store it in process memory."
     ),
 )
-def sign_message(request: SignRequest) -> SignResponse:
+def sign_message(
+    request: SignRequest,
+    _: User = Depends(get_current_user),
+) -> SignResponse:
     try:
         signature = generate_quantum_signature(
             signer=request.sender,
@@ -133,7 +138,10 @@ def sign_message(request: SignRequest) -> SignResponse:
         "recording the request in replay history."
     ),
 )
-def verify_message(request: VerifyRequest) -> VerifyResponse:
+def verify_message(
+    request: VerifyRequest,
+    _: User = Depends(get_current_user),
+) -> VerifyResponse:
     result = _detect(request, use_replay_guard=False)
     return VerifyResponse(
         verification=result["overall_verification"],
@@ -158,7 +166,10 @@ def verify_message(request: VerifyRequest) -> VerifyResponse:
         "submission history rather than trusting an attack label."
     ),
 )
-def check_security(request: SecurityCheckRequest) -> SecurityCheckResponse:
+def check_security(
+    request: SecurityCheckRequest,
+    _: User = Depends(require_security_operator),
+) -> SecurityCheckResponse:
     result = _detect(request, use_replay_guard=True)
     attack_detected = result["attack_type"] != "NONE"
     return SecurityCheckResponse(
@@ -185,7 +196,9 @@ def check_security(request: SecurityCheckRequest) -> SecurityCheckResponse:
     tags=["Quantum threat forensics"],
     summary="Report quantum forensics capability",
 )
-def quantum_forensics_status() -> QuantumStatusResponse:
+def quantum_forensics_status(
+    _: User = Depends(require_security_operator),
+) -> QuantumStatusResponse:
     """Return the simulator scenarios available to V0.8 clients."""
     return QuantumStatusResponse(
         module="Quantum Threat Forensics",
@@ -206,6 +219,7 @@ def quantum_forensics_status() -> QuantumStatusResponse:
 )
 def analyze_quantum_channel(
     request: QuantumAnalyzeRequest,
+    _: User = Depends(require_security_operator),
 ) -> QuantumAnalyzeResponse:
     """Run the simulator and keep its ground truth outside the classifier."""
     experiment = run_quantum_channel_experiment(
