@@ -1,8 +1,5 @@
-const configuredApiUrl = import.meta.env.VITE_API_BASE_URL?.trim()
-
-export const API_BASE_URL = configuredApiUrl
-  ? configuredApiUrl.replace(/\/+$/, '')
-  : import.meta.env.DEV ? 'http://127.0.0.1:8000' : ''
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000'
 
 export class ApiError extends Error {
   constructor(message, status = 0) {
@@ -41,8 +38,8 @@ async function request(path, options = {}) {
   return data
 }
 
-export function checkHealth(options = {}) {
-  return request('/health', options)
+export function checkHealth() {
+  return request('/health')
 }
 
 export function signMessage({ sender, message }) {

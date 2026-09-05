@@ -2,7 +2,7 @@ import { Activity, RefreshCw, ShieldCheck } from 'lucide-react'
 
 function Header({ backendStatus, onRefresh }) {
   const online = backendStatus === 'online'
-  const connecting = backendStatus === 'connecting'
+  const checking = backendStatus === 'checking'
 
   return (
     <header className="topbar">
@@ -18,17 +18,17 @@ function Header({ backendStatus, onRefresh }) {
       </div>
 
       <div className="system-status" aria-live="polite">
-        <span className={`status-dot ${online ? 'online' : connecting ? 'connecting' : 'offline'}`} />
+        <span className={`status-dot ${online ? 'online' : 'offline'}`} />
         <Activity size={16} />
-        <span>{online ? 'System Online' : connecting ? 'Waking Q-Sign Security Engine...' : 'Backend Offline'}</span>
+        <span>{online ? 'System Online' : checking ? 'Checking Backend' : 'Backend Offline'}</span>
         <button
           className="icon-button"
           type="button"
           onClick={onRefresh}
           aria-label="Refresh backend status"
-          disabled={connecting}
+          disabled={checking}
         >
-          <RefreshCw size={16} className={connecting ? 'spin' : ''} />
+          <RefreshCw size={16} className={checking ? 'spin' : ''} />
         </button>
       </div>
     </header>

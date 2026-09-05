@@ -56,7 +56,6 @@ code { font-family: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace; f
 }
 .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #8fa7bc; }
 .status-dot.online { background: #4ee3a5; box-shadow: 0 0 0 4px rgba(78, 227, 165, 0.1); }
-.status-dot.connecting { background: #f2c66d; box-shadow: 0 0 0 4px rgba(242, 198, 109, 0.1); }
 .status-dot.offline { background: #ff826f; box-shadow: 0 0 0 4px rgba(255, 130, 111, 0.1); }
 .icon-button { display: grid; place-items: center; width: 30px; height: 30px; margin-left: 4px; padding: 0; border: 0; border-radius: 7px; color: #9ec3da; background: transparent; }
 .icon-button:hover:not(:disabled) { color: #f1f7fb; background: rgba(152, 195, 222, 0.12); }
@@ -70,8 +69,7 @@ main { width: min(1380px, calc(100% - 48px)); margin: 0 auto; padding: 36px 0 54
 }
 .feedback.success { color: #abf4d2; background: rgba(24, 161, 110, 0.13); border-color: rgba(73, 221, 156, 0.34); }
 .feedback.threat, .feedback.error { color: #ffc1b4; background: rgba(179, 56, 44, 0.16); border-color: rgba(255, 116, 92, 0.4); }
-.offline-banner { display: flex; align-items: center; justify-content: space-between; gap: 16px; color: #ffd6a7; background: rgba(170, 101, 21, 0.17); border-color: rgba(255, 172, 69, 0.35); }
-.offline-banner .secondary-button { flex: 0 0 auto; min-height: 34px; }
+.offline-banner { color: #ffd6a7; background: rgba(170, 101, 21, 0.17); border-color: rgba(255, 172, 69, 0.35); }
 
 .hero-strip { display: flex; align-items: end; justify-content: space-between; gap: 34px; padding: 0 0 30px; }
 .hero-strip h2 { max-width: 720px; margin: 8px 0 0; font-size: clamp(24px, 3.1vw, 38px); line-height: 1.18; letter-spacing: -0.04em; }

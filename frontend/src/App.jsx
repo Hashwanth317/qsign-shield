@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import AttackLab from './components/AttackLab'
 import Header from './components/Header'
 import InfoPanel from './components/InfoPanel'
@@ -19,9 +19,6 @@ const ATTACK_BY_DECISION = {
   'REPLAY ATTACK DETECTED': 'REPLAY',
   'IMPERSONATION ATTACK DETECTED': 'IMPERSONATION',
 }
-
-const HEALTH_RETRY_INTERVAL_MS = 5_000
-const HEALTH_RETRY_WINDOW_MS = 60_000
 
 function normalizeResult(data, context) {
   const overallVerification = data.overall_verification ?? data.verification
@@ -46,7 +43,7 @@ function tamperedBits(bits) {
 }
 
 function App() {
-  const [backendStatus, setBackendStatus] = useState('connecting')
+  const [backendStatus, setBackendStatus] = useState('checking')
   const [signedTransaction, setSignedTransaction] = useState(null)
   const [latestResult, setLatestResult] = useState(null)
   const [events, setEvents] = useState([])
@@ -54,10 +51,6 @@ function App() {
   const [signing, setSigning] = useState(false)
   const [verifying, setVerifying] = useState(false)
   const [activeAttack, setActiveAttack] = useState(null)
-  const healthRunId = useRef(0)
-  const healthRetryTimer = useRef(null)
-  const healthDeadlineTimer = useRef(null)
-  const pendingHealthRequests = useRef(new Set())
 
   const backendOnline = backendStatus === 'online'
 
@@ -77,70 +70,25 @@ function App() {
     }
   }, [events])
 
-  const stopHealthSequence = useCallback(() => {
-    window.clearInterval(healthRetryTimer.current)
-    window.clearTimeout(healthDeadlineTimer.current)
-    healthRetryTimer.current = null
-    healthDeadlineTimer.current = null
-
-    pendingHealthRequests.current.forEach((controller) => controller.abort())
-    pendingHealthRequests.current.clear()
-  }, [])
-
-  const refreshHealth = useCallback(() => {
-    stopHealthSequence()
-
-    const runId = healthRunId.current + 1
-    healthRunId.current = runId
-    globalThis.queueMicrotask(() => {
-      if (healthRunId.current === runId) setBackendStatus('connecting')
-    })
-
-    async function attemptHealthCheck() {
-      const controller = new AbortController()
-      pendingHealthRequests.current.add(controller)
-
-      try {
-        await checkHealth({ signal: controller.signal })
-        if (healthRunId.current !== runId) return
-
-        stopHealthSequence()
-        setBackendStatus('online')
-      } catch {
-        // A failed attempt is expected while Render wakes. The deadline below is
-        // the only place that marks the backend offline.
-      } finally {
-        pendingHealthRequests.current.delete(controller)
-      }
-    }
-
-    attemptHealthCheck()
-    healthRetryTimer.current = window.setInterval(
-      attemptHealthCheck,
-      HEALTH_RETRY_INTERVAL_MS,
-    )
-    healthDeadlineTimer.current = window.setTimeout(() => {
-      if (healthRunId.current !== runId) return
-
-      stopHealthSequence()
-      setBackendStatus('offline')
-    }, HEALTH_RETRY_WINDOW_MS)
-  }, [stopHealthSequence])
-
   useEffect(() => {
     refreshHealth()
-
-    return () => {
-      healthRunId.current += 1
-      stopHealthSequence()
-    }
-  }, [refreshHealth, stopHealthSequence])
+  }, [])
 
   useEffect(() => {
     if (!feedback) return undefined
     const timeout = window.setTimeout(() => setFeedback(null), 5000)
     return () => window.clearTimeout(timeout)
   }, [feedback])
+
+  async function refreshHealth() {
+    setBackendStatus('checking')
+    try {
+      const response = await checkHealth()
+      setBackendStatus(response.status === 'healthy' ? 'online' : 'offline')
+    } catch {
+      setBackendStatus('offline')
+    }
+  }
 
   function showFeedback(nextFeedback) {
     setFeedback(nextFeedback)
@@ -289,19 +237,17 @@ function App() {
       <Header backendStatus={backendStatus} onRefresh={refreshHealth} />
 
       {feedback && <div className={`feedback ${feedback.type}`} role="status">{feedback.message}</div>}
-      {backendStatus === 'offline' && (
-        <div className="offline-banner" role="alert">
-          <span>Backend Offline</span>
-          <button className="secondary-button" type="button" onClick={refreshHealth}>Retry Connection</button>
-        </div>
+      {!backendOnline && backendStatus === 'offline' && (
+        <div className="offline-banner">Unable to contact Q-Sign Security Engine. Start the FastAPI backend at <code>http://127.0.0.1:8000</code>.</div>
       )}
 
       <main>
         <section className="hero-strip">
           <div>
             <p className="section-kicker">LIVE SECURITY WORKSPACE</p>
-            <h2>Sign, verify, and test quantum-secured transactions using live backend results.</h2>
+            <h2>Validate quantum-signature transactions and demonstrate defensive controls.</h2>
           </div>
+          <p>All results below are returned by the existing Q-Sign Shield backend.</p>
         </section>
 
         <StatsCards stats={stats} />
